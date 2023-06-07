@@ -67,4 +67,48 @@ public class Demon
     {
         return Mathf.FloorToInt((stat * level) / 100f) + 5;
     }
+
+    public DamageDetails TakeDamage(Move move, Demon attacker)
+    {
+        float criticalHit = 1.0f;
+        if (Random.value * 100f <= 6.25)
+            criticalHit = 2.0f;
+
+        float typeEffectiveness = TypeChart.GetEffectiveness(move.Base.Type, this.Base.Type);
+
+        var damageDetails = new DamageDetails()
+        {
+            TypeEffectiveness = typeEffectiveness,
+            Critical = criticalHit,
+            Fainted = false,
+        };
+
+        float modifiers = Random.Range(0.85f, 1f) * typeEffectiveness * criticalHit;
+        float a = (2 * attacker.Level + 10) / 250f;
+        float d = a * move.Base.Power * ((float)attacker.Attack / Defense) + 2;
+        int damage = Mathf.FloorToInt(d * modifiers);
+
+        HP -= damage;
+
+        if (HP <= 0)
+        {
+            HP = 0;
+            damageDetails.Fainted = true;
+        }
+
+        return damageDetails;
+    }
+
+    public Move GetRandomMove()
+    {
+        int r = Random.Range(0, Moves.Count);
+        return Moves[r];
+    }
+}
+
+public class DamageDetails
+{
+    public bool Fainted { get; set;}
+    public float Critical { get; set;}
+    public float TypeEffectiveness { get; set;}
 }

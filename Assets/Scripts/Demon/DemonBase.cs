@@ -32,6 +32,8 @@ public class DemonBase : ScriptableObject
     public Sprite FrontSprite { get { return frontSprite; } }
     public Sprite BackSprite { get { return backSprite; } }
 
+    public DemonType Type { get { return demonType; } }
+
     public int MaxHP { get { return maxHp; } }
     public int Attack { get { return attack; } }
     public int Defense { get {  return defense; } }
@@ -56,8 +58,46 @@ public class LearnableMoves
 
 public enum DemonType
 {
+    None,
     Normal,
     Fire,
     Water,
-    Grass
+    Eletric,
+    Grass,
+    Ice,
+    Fighting,
+    Poison,
+    Ground,
+    Flying,
+    Psychic,
+    Bug,
+    Rock,
+    Ghost,
+    Dragon
+}
+
+public class TypeChart
+{
+    static float[][] chart =
+    {
+        //                    NOR   FIR   WAT   ELE   GRA   ICE   FIG   POI
+        /*NOR*/ new float[] { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f },
+        /*FIR*/ new float[] { 1.0f, 0.5f, 0.5f, 1.0f, 2.0f, 2.0f, 1.0f, 1.0f },
+        /*WAT*/ new float[] { 1.0f, 2.0f, 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f },
+        /*ELE*/ new float[] { 1.0f, 2.0f, 2.0f, 0.5f, 0.5f, 1.0f, 1.0f, 1.0f },
+        /*GRA*/ new float[] { 1.0f, 0.5f, 2.0f, 2.0f, 0.5f, 1.0f, 1.0f, 1.0f },
+        /*ICE*/ new float[] { 1.0f, 2.0f, 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f },
+        /*FIG*/ new float[] { 1.0f, 2.0f, 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f },
+        /*POS*/ new float[] { 1.0f, 2.0f, 0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }
+    };
+
+    public static float GetEffectiveness(DemonType attackType, DemonType defenseType)
+    {
+        if (attackType == DemonType.None || defenseType == DemonType.None) return 1.0f;
+
+        int row = (int)attackType - 1;
+        int column = (int)defenseType - 1;
+
+        return chart[row][column];
+    }
 }

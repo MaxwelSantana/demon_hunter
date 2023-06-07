@@ -35,7 +35,6 @@ public class BattleSystem : MonoBehaviour
         dialogBox.SetMoveNames(playerUnit.Demon.Moves);
 
         yield return dialogBox.TypeDialog($"A wild {enemyUnit.Demon.Base.Name} appeared.");
-        yield return new WaitForSeconds(1f);
 
         PlayerAction();
     }
@@ -53,6 +52,58 @@ public class BattleSystem : MonoBehaviour
         dialogBox.EnableActionSelector(false);
         dialogBox.EnableDialogText(false);
         dialogBox.EnableMoveSelector(true);
+    }
+
+    private IEnumerator PerformPlayerMove()
+    {
+        state = BattleState.Busy;
+        var move = playerUnit.Demon.Moves[currentMove];
+        yield return dialogBox.TypeDialog($"{playerUnit.Demon.Base.Name} used {move.Base.Name}");
+        
+        var damageDetails = enemyUnit.Demon.TakeDamage(move, playerUnit.Demon);
+        yield return enemyHud.UpdateHP();
+        yield return ShowDamageDetails(damageDetails);
+
+        if (damageDetails.Fainted)
+        {
+            yield return dialogBox.TypeDialog($"{enemyUnit.Demon.Base.Name} Fainted");
+        } else
+        {
+            StartCoroutine(PerformEnemyMove());
+        }
+    }
+
+    private IEnumerator PerformEnemyMove()
+    {
+        state = BattleState.EnemyMove;
+
+        var move = enemyUnit.Demon.GetRandomMove();
+
+        yield return dialogBox.TypeDialog($"{enemyUnit.Demon.Base.Name} used {move.Base.Name}");
+
+        var damageDetails = playerUnit.Demon.TakeDamage(move, enemyUnit.Demon);
+        yield return playerHud.UpdateHP();
+        yield return ShowDamageDetails(damageDetails);
+
+        if (damageDetails.Fainted)
+        {
+            yield return dialogBox.TypeDialog($"{playerUnit.Demon.Base.Name} Fainted");
+        }
+        else
+        {
+            PlayerAction();
+        }
+    }
+
+    private IEnumerator ShowDamageDetails(DamageDetails damageDetails)
+    {
+        if (damageDetails.Critical > 1f)
+            yield return dialogBox.TypeDialog("A critical hit!");
+
+        if (damageDetails.TypeEffectiveness > 1f)
+            yield return dialogBox.TypeDialog("It's super effective!");
+        else if (damageDetails.TypeEffectiveness < 1f)
+            yield return dialogBox.TypeDialog("It's not very effective...");
     }
 
     private void Update()
@@ -80,7 +131,7 @@ public class BattleSystem : MonoBehaviour
 
         dialogBox.UpdateActionSelection(currentAction);
 
-        if (Input.GetKeyDown(KeyCode.Z))
+        if (Input.GetKeyDown(KeyCode.Return))
         {
             if (currentAction == 0)
             {
@@ -115,6 +166,12 @@ public class BattleSystem : MonoBehaviour
         }
 
         dialogBox.UpdateMoveSelection(currentMove, playerUnit.Demon.Moves[currentMove]);
-    }
 
+        if(Input.GetKeyDown(KeyCode.Return))
+        {
+            dialogBox.EnableMoveSelector(false);
+            dialogBox.EnableDialogText(true);
+            StartCoroutine(PerformPlayerMove());
+        }
+    }
 }
