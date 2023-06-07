@@ -16,11 +16,13 @@ public class BattleSystem : MonoBehaviour
     [SerializeField] BattleHud enemyHud;
     [SerializeField] BattleDialogBox dialogBox;
 
+    public event Action<bool> OnBattleOver;
+
     BattleState state;
     int currentAction;
     int currentMove;
 
-    private void Start()
+    public void StartBattle()
     {
         StartCoroutine(SetupBattle());
     }
@@ -67,6 +69,9 @@ public class BattleSystem : MonoBehaviour
         if (damageDetails.Fainted)
         {
             yield return dialogBox.TypeDialog($"{enemyUnit.Demon.Base.Name} Fainted");
+
+            yield return new WaitForSeconds(2f);
+            OnBattleOver(true);
         } else
         {
             StartCoroutine(PerformEnemyMove());
@@ -88,6 +93,9 @@ public class BattleSystem : MonoBehaviour
         if (damageDetails.Fainted)
         {
             yield return dialogBox.TypeDialog($"{playerUnit.Demon.Base.Name} Fainted");
+
+            yield return new WaitForSeconds(2f);
+            OnBattleOver(false);
         }
         else
         {
@@ -106,7 +114,7 @@ public class BattleSystem : MonoBehaviour
             yield return dialogBox.TypeDialog("It's not very effective...");
     }
 
-    private void Update()
+    public void HandleUpdate()
     {
         if (state == BattleState.PlayerAction)
         {

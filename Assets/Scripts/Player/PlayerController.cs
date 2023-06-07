@@ -7,7 +7,9 @@ public class PlayerController : MonoBehaviour
 {
     public float moveSpeed;
     public LayerMask solidObjectsLayer;
-    public LayerMask longGrassLayer;
+    public LayerMask grassLayer;
+
+    public event Action OnEncountered;
 
     private bool isMoving;
     private Vector2 input;
@@ -19,7 +21,7 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
-    private void Update()
+    public void HandleUpdate()
     {
         if (!isMoving)
         {
@@ -74,11 +76,13 @@ public class PlayerController : MonoBehaviour
     }
     private void CheckForEncounters()
     {
-        if (Physics2D.OverlapCircle(transform.position, 0.2f, longGrassLayer) != null)
+        if (Physics2D.OverlapCircle(transform.position, 0.2f, grassLayer) != null)
         {
             if (Random.Range(1, 101) <= 10)
             {
-                Debug.Log("Encontered a wild pokemon");
+                animator.SetBool("isMoving", isMoving);
+                Debug.Log("A wild demon appeared!");
+                OnEncountered();
             }
         }
     }
