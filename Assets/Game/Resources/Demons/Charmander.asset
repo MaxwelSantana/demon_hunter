@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69fddc55bc5a4ef499b038ef6eb791cf, type: 3}
   m_Name: Charmander
   m_EditorClassIdentifier: 
-  name: Charmander
+  name: Skeleton Fire
   description: 
-  frontSprite: {fileID: 21300000, guid: cd259d9d4f8ba2749a16d1cc64d46bec, type: 3}
-  backSprite: {fileID: 21300000, guid: ed8e1d9976a1fd94d961840d8f6e7764, type: 3}
-  demonType: 1
+  frontSprite: {fileID: -1920814117, guid: e8b0806ca49eca442b9616a64fd9fe3c, type: 3}
+  backSprite: {fileID: -1267218590, guid: e8b0806ca49eca442b9616a64fd9fe3c, type: 3}
+  demonType: 2
   maxHp: 39
   attack: 52
   defense: 43
