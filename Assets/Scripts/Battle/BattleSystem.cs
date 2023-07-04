@@ -5,7 +5,7 @@ using UnityEngine;
 
 public enum BattleState
 {
-    Start, PlayerAction, PlayerMove, EnemyMove, Busy
+    Start, PlayerAction, PlayerMove, EnemyMove, Busy, PartyScreen
 }
 
 public class BattleSystem : MonoBehaviour
@@ -15,12 +15,14 @@ public class BattleSystem : MonoBehaviour
     [SerializeField] BattleHud playerHud;
     [SerializeField] BattleHud enemyHud;
     [SerializeField] BattleDialogBox dialogBox;
+    [SerializeField] PartyScreen partyScreen;
 
     public event Action<bool> OnBattleOver;
 
     BattleState state;
     int currentAction;
     int currentMove;
+    int currentMember;
 
     DemonParty playerParty;
     Demon wildDemon;
@@ -39,6 +41,8 @@ public class BattleSystem : MonoBehaviour
         playerHud.SetData(playerUnit.Demon);
         enemyHud.SetData(enemyUnit.Demon);
 
+        partyScreen.Init();
+
         dialogBox.SetMoveNames(playerUnit.Demon.Moves);
 
         yield return dialogBox.TypeDialog($"A wild {enemyUnit.Demon.Base.Name} appeared.");
@@ -49,8 +53,15 @@ public class BattleSystem : MonoBehaviour
     private void PlayerAction()
     {
         state = BattleState.PlayerAction;
-        StartCoroutine(dialogBox.TypeDialog("Choose an action"));
+        dialogBox.SetDialog("Choose an action");
         dialogBox.EnableActionSelector(true);
+    }
+
+    private void OpenPartyScreen()
+    {
+        state = BattleState.PartyScreen;
+        partyScreen.SetPartyData(playerParty.Demons);
+        partyScreen.gameObject.SetActive(true);
     }
 
     private void PlayerMove()
@@ -103,14 +114,7 @@ public class BattleSystem : MonoBehaviour
 
             var nextDemon = playerParty.GetHelthyDemon();
             if (nextDemon != null) {
-                playerUnit.Setup(nextDemon);
-                playerHud.SetData(nextDemon);
-
-                dialogBox.SetMoveNames(nextDemon.Moves);
-
-                yield return dialogBox.TypeDialog($"Go {nextDemon.Base.Name}!");
-
-                PlayerAction();
+                OpenPartyScreen();
             } else
             {
                 OnBattleOver(false);
@@ -142,19 +146,32 @@ public class BattleSystem : MonoBehaviour
         {
             HandleMoveSelection();
         }
+        else if (state == BattleState.PartyScreen)
+        {
+            HandlePartySelection();
+        }
     }
 
     private void HandleActionSelector()
     {
-        if (Input.GetKeyDown(KeyCode.DownArrow))
+        if (Input.GetKeyDown(KeyCode.RightArrow))
         {
-            if (currentAction < 1)
-                ++currentAction;
-        } else if (Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            if (currentAction > 0)
-                --currentAction;
+            ++currentAction;
         }
+        else if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            --currentAction;
+        }
+        else if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            currentAction += 2;
+        }
+        else if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            currentAction -= 2;
+        }
+
+        currentAction = Mathf.Clamp(currentAction, 0, 3);
 
         dialogBox.UpdateActionSelection(currentAction);
 
@@ -162,35 +179,42 @@ public class BattleSystem : MonoBehaviour
         {
             if (currentAction == 0)
             {
+                // Fight
                 PlayerMove();
             } else if (currentAction == 1)
             {
-
+                // Bag
+            } else if (currentAction == 2)
+            {
+                // Demon
+                OpenPartyScreen();
+            } else if (currentAction == 3)
+            {
+                // Run
             }
         }
     }
 
     private void HandleMoveSelection()
     {
-        int movesCount = playerUnit.Demon.Moves.Count;
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
-            if (currentMove < movesCount - 1)
-                ++currentMove;
+            ++currentMove;
         }
         else if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            if (currentMove > 0)
-                --currentMove;
+            --currentMove;
         }
-        else if (Input.GetKeyDown(KeyCode.DownArrow) && movesCount > 2) {
-            if (currentMove < movesCount)
-                currentMove += 2;
+        else if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            currentMove += 2;
         }
-        else if (Input.GetKeyDown(KeyCode.UpArrow) && movesCount > 2) {
-            if(currentMove > 1)
-                currentMove -= 2;
+        else if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            currentMove -= 2;
         }
+
+        currentMove = Mathf.Clamp(currentMove, 0, playerUnit.Demon.Moves.Count - 1);
 
         dialogBox.UpdateMoveSelection(currentMove, playerUnit.Demon.Moves[currentMove]);
 
@@ -199,6 +223,77 @@ public class BattleSystem : MonoBehaviour
             dialogBox.EnableMoveSelector(false);
             dialogBox.EnableDialogText(true);
             StartCoroutine(PerformPlayerMove());
+        } else if (Input.GetKeyDown(KeyCode.X))
+        {
+            dialogBox.EnableMoveSelector(false);
+            dialogBox.EnableDialogText(true);
+            PlayerAction();
         }
+    }
+
+    private void HandlePartySelection()
+    {
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            ++currentMember;
+        }
+        else if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            --currentMember;
+        }
+        else if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            currentMember += 2;
+        }
+        else if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            currentMember -= 2;
+        }
+
+        currentMember = Mathf.Clamp(currentMember, 0, playerParty.Demons.Count - 1);
+
+        partyScreen.UpdateMemberSelection(currentMember);
+
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            var selectedMember = playerParty.Demons[currentMember];
+            if (selectedMember.HP < 0)
+            {
+                partyScreen.SetMessageText("You can't send out a fainted Demon");
+                return;
+            }
+
+            if (selectedMember == playerUnit.Demon)
+            {
+                partyScreen.SetMessageText("You can't switch with the same Demon");
+                return;
+            }
+
+            partyScreen.gameObject.SetActive(false);
+            state = BattleState.Busy;
+            StartCoroutine(SwitchDemon(selectedMember));
+        } else if (Input.GetKeyDown(KeyCode.X))
+        {
+            partyScreen.gameObject.SetActive(false);
+            PlayerAction();
+        }
+    }
+
+    IEnumerator SwitchDemon(Demon newDemon)
+    {
+        if (playerUnit.Demon.HP > 0)
+        {
+            yield return dialogBox.TypeDialog($"Come back {playerUnit.Demon.Base.Name}");
+            yield return new WaitForSeconds(2);
+        }
+
+        playerUnit.Setup(newDemon);
+        playerHud.SetData(newDemon);
+
+        dialogBox.SetMoveNames(newDemon.Moves);
+
+        yield return dialogBox.TypeDialog($"Go {newDemon.Base.Name}!");
+
+        StartCoroutine(PerformEnemyMove());
     }
 }
