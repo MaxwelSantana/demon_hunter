@@ -6,8 +6,23 @@ using UnityEngine.UI;
 public class BattleUnit : MonoBehaviour
 {
     [SerializeField] bool isPlayerUnit;
+    [SerializeField] BattleHud hud;
+
+    public bool IsPlayerUnit
+    {
+        get { return isPlayerUnit; }
+    }
+
+    public BattleHud Hud { get { return hud; } }
 
     public Demon Demon { get; private set; }
+
+    private Image image;
+
+    private void Awake()
+    {
+        image = GetComponent<Image>();
+    }
 
     public void Setup(Demon demon)
     {
@@ -15,10 +30,12 @@ public class BattleUnit : MonoBehaviour
 
         if (isPlayerUnit)
         {
-            GetComponent<Image>().sprite = Demon.Base.BackSprite;
+            image.sprite = Demon.Base.BackSprite;
         } else
         {
-            GetComponent<Image>().sprite = Demon.Base.FrontSprite;
+            image.sprite = Demon.Base.FrontSprite;
         }
+
+        hud.SetData(demon);
     }
 }

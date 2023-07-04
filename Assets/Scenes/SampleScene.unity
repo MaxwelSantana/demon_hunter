@@ -10021,6 +10021,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPlayerUnit: 0
+  hud: {fileID: 119223242}
 --- !u!1001 &1675251890
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11698,8 +11699,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerUnit: {fileID: 2111626497}
   enemyUnit: {fileID: 1667856154}
-  playerHud: {fileID: 842158332}
-  enemyHud: {fileID: 119223242}
   dialogBox: {fileID: 542723546}
   partyScreen: {fileID: 1386535244}
 --- !u!1 &2074968756
@@ -11857,6 +11856,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPlayerUnit: 1
+  hud: {fileID: 842158332}
 --- !u!1 &2112087305
 GameObject:
   m_ObjectHideFlags: 0

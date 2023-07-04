@@ -5,15 +5,13 @@ using UnityEngine;
 
 public enum BattleState
 {
-    Start, PlayerAction, PlayerMove, EnemyMove, Busy, PartyScreen
+    Start, ActionSelection, MoveSelection, PerformMove, Busy, PartyScreen, BattleOver
 }
 
 public class BattleSystem : MonoBehaviour
 {
     [SerializeField] BattleUnit playerUnit;
     [SerializeField] BattleUnit enemyUnit;
-    [SerializeField] BattleHud playerHud;
-    [SerializeField] BattleHud enemyHud;
     [SerializeField] BattleDialogBox dialogBox;
     [SerializeField] PartyScreen partyScreen;
 
@@ -38,8 +36,6 @@ public class BattleSystem : MonoBehaviour
     {
         playerUnit.Setup(playerParty.GetHelthyDemon());
         enemyUnit.Setup(wildDemon);
-        playerHud.SetData(playerUnit.Demon);
-        enemyHud.SetData(enemyUnit.Demon);
 
         partyScreen.Init();
 
@@ -47,12 +43,18 @@ public class BattleSystem : MonoBehaviour
 
         yield return dialogBox.TypeDialog($"A wild {enemyUnit.Demon.Base.Name} appeared.");
 
-        PlayerAction();
+        ActionSelection();
     }
 
-    private void PlayerAction()
+    private void BattleOver(bool won)
     {
-        state = BattleState.PlayerAction;
+        state = BattleState.BattleOver;
+        OnBattleOver(won);
+    }
+
+    private void ActionSelection()
+    {
+        state = BattleState.ActionSelection;
         dialogBox.SetDialog("Choose an action");
         dialogBox.EnableActionSelector(true);
     }
@@ -64,65 +66,74 @@ public class BattleSystem : MonoBehaviour
         partyScreen.gameObject.SetActive(true);
     }
 
-    private void PlayerMove()
+    private void MoveSelection()
     {
-        state = BattleState.PlayerMove;
+        state = BattleState.MoveSelection;
         dialogBox.EnableActionSelector(false);
         dialogBox.EnableDialogText(false);
         dialogBox.EnableMoveSelector(true);
     }
 
-    private IEnumerator PerformPlayerMove()
+    private IEnumerator PlayerMove()
     {
-        state = BattleState.Busy;
+        state = BattleState.PerformMove;
         var move = playerUnit.Demon.Moves[currentMove];
-        yield return dialogBox.TypeDialog($"{playerUnit.Demon.Base.Name} used {move.Base.Name}");
-        
-        var damageDetails = enemyUnit.Demon.TakeDamage(move, playerUnit.Demon);
-        yield return enemyHud.UpdateHP();
-        yield return ShowDamageDetails(damageDetails);
 
-        if (damageDetails.Fainted)
-        {
-            yield return dialogBox.TypeDialog($"{enemyUnit.Demon.Base.Name} Fainted");
+        yield return RunMove(playerUnit, enemyUnit, move);
 
-            yield return new WaitForSeconds(2f);
-            OnBattleOver(true);
-        } else
-        {
-            StartCoroutine(PerformEnemyMove());
-        }
+        // If the battle stat was not changed by RunMove, then go to next step.
+        if (state == BattleState.PerformMove)
+            StartCoroutine(EnemyMove());
     }
 
-    private IEnumerator PerformEnemyMove()
+    private IEnumerator EnemyMove()
     {
-        state = BattleState.EnemyMove;
+        state = BattleState.PerformMove;
 
         var move = enemyUnit.Demon.GetRandomMove();
 
-        yield return dialogBox.TypeDialog($"{enemyUnit.Demon.Base.Name} used {move.Base.Name}");
+        yield return RunMove(enemyUnit, playerUnit, move);
 
-        var damageDetails = playerUnit.Demon.TakeDamage(move, enemyUnit.Demon);
-        yield return playerHud.UpdateHP();
+        // If the battle stat was not changed by RunMove, then go to next step.
+        if (state == BattleState.PerformMove)
+            ActionSelection();
+    }
+
+    IEnumerator RunMove(BattleUnit sourceUnit, BattleUnit targetUnit, Move move)
+    {
+        move.PP--;
+        yield return dialogBox.TypeDialog($"{sourceUnit.Demon.Base.Name} used {move.Base.Name}");
+
+        var damageDetails = targetUnit.Demon.TakeDamage(move, sourceUnit.Demon);
+        yield return targetUnit.Hud.UpdateHP();
         yield return ShowDamageDetails(damageDetails);
 
         if (damageDetails.Fainted)
         {
-            yield return dialogBox.TypeDialog($"{playerUnit.Demon.Base.Name} Fainted");
+            yield return dialogBox.TypeDialog($"{targetUnit.Demon.Base.Name} Fainted");
 
             yield return new WaitForSeconds(2f);
 
-            var nextDemon = playerParty.GetHelthyDemon();
-            if (nextDemon != null) {
-                OpenPartyScreen();
-            } else
-            {
-                OnBattleOver(false);
-            }
+            CheckForBattleOver(targetUnit);
         }
-        else
+    }
+
+    void CheckForBattleOver(BattleUnit faintedUnit)
+    {
+        if (faintedUnit.IsPlayerUnit)
         {
-            PlayerAction();
+            var nextDemon = playerParty.GetHelthyDemon();
+            if (nextDemon != null)
+            {
+                OpenPartyScreen();
+            }
+            else
+            {
+                BattleOver(false);
+            }
+        } else
+        {
+            BattleOver(true);
         }
     }
 
@@ -139,10 +150,10 @@ public class BattleSystem : MonoBehaviour
 
     public void HandleUpdate()
     {
-        if (state == BattleState.PlayerAction)
+        if (state == BattleState.ActionSelection)
         {
             HandleActionSelector();
-        } else if (state == BattleState.PlayerMove)
+        } else if (state == BattleState.MoveSelection)
         {
             HandleMoveSelection();
         }
@@ -180,7 +191,7 @@ public class BattleSystem : MonoBehaviour
             if (currentAction == 0)
             {
                 // Fight
-                PlayerMove();
+                MoveSelection();
             } else if (currentAction == 1)
             {
                 // Bag
@@ -222,12 +233,12 @@ public class BattleSystem : MonoBehaviour
         {
             dialogBox.EnableMoveSelector(false);
             dialogBox.EnableDialogText(true);
-            StartCoroutine(PerformPlayerMove());
+            StartCoroutine(PlayerMove());
         } else if (Input.GetKeyDown(KeyCode.X))
         {
             dialogBox.EnableMoveSelector(false);
             dialogBox.EnableDialogText(true);
-            PlayerAction();
+            ActionSelection();
         }
     }
 
@@ -257,7 +268,7 @@ public class BattleSystem : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Return))
         {
             var selectedMember = playerParty.Demons[currentMember];
-            if (selectedMember.HP < 0)
+            if (selectedMember.HP <= 0)
             {
                 partyScreen.SetMessageText("You can't send out a fainted Demon");
                 return;
@@ -275,7 +286,7 @@ public class BattleSystem : MonoBehaviour
         } else if (Input.GetKeyDown(KeyCode.X))
         {
             partyScreen.gameObject.SetActive(false);
-            PlayerAction();
+            ActionSelection();
         }
     }
 
@@ -288,12 +299,11 @@ public class BattleSystem : MonoBehaviour
         }
 
         playerUnit.Setup(newDemon);
-        playerHud.SetData(newDemon);
 
         dialogBox.SetMoveNames(newDemon.Moves);
 
         yield return dialogBox.TypeDialog($"Go {newDemon.Base.Name}!");
 
-        StartCoroutine(PerformEnemyMove());
+        StartCoroutine(EnemyMove());
     }
 }
