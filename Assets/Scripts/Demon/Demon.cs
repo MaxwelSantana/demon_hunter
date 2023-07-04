@@ -2,19 +2,31 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public class Demon
 {
-    public DemonBase Base { get; set; }
-    public int Level { get; set; }
+    [SerializeField] DemonBase _base;
+    [SerializeField] int level;
+
+    public DemonBase Base { 
+        get {
+            return _base;
+        }
+    }
+    public int Level
+    {
+        get
+        {
+            return level;
+        }
+    }
 
     public int HP { get; private set; }
 
     public List<Move> Moves {  get; private set; } 
 
-    public Demon(DemonBase demonBase, int demonLevel)
+    public void Init()
     {
-        Base = demonBase;
-        Level = demonLevel;
         HP = MaxHp;
 
         Moves = new List<Move>();

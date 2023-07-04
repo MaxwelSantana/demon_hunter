@@ -78,7 +78,7 @@ public class PlayerController : MonoBehaviour
     {
         if (Physics2D.OverlapCircle(transform.position, 0.2f, grassLayer) != null)
         {
-            if (Random.Range(1, 101) <= 10)
+            if (Random.Range(1, 101) <= 50)
             {
                 animator.SetBool("isMoving", isMoving);
                 Debug.Log("A wild demon appeared!");

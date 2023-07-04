@@ -22,15 +22,20 @@ public class BattleSystem : MonoBehaviour
     int currentAction;
     int currentMove;
 
-    public void StartBattle()
+    DemonParty playerParty;
+    Demon wildDemon;
+
+    public void StartBattle(DemonParty playerParty, Demon wildDemon)
     {
+        this.playerParty = playerParty;
+        this.wildDemon = wildDemon;
         StartCoroutine(SetupBattle());
     }
 
     private IEnumerator SetupBattle()
     {
-        playerUnit.Setup();
-        enemyUnit.Setup();
+        playerUnit.Setup(playerParty.GetHelthyDemon());
+        enemyUnit.Setup(wildDemon);
         playerHud.SetData(playerUnit.Demon);
         enemyHud.SetData(enemyUnit.Demon);
 
@@ -95,7 +100,21 @@ public class BattleSystem : MonoBehaviour
             yield return dialogBox.TypeDialog($"{playerUnit.Demon.Base.Name} Fainted");
 
             yield return new WaitForSeconds(2f);
-            OnBattleOver(false);
+
+            var nextDemon = playerParty.GetHelthyDemon();
+            if (nextDemon != null) {
+                playerUnit.Setup(nextDemon);
+                playerHud.SetData(nextDemon);
+
+                dialogBox.SetMoveNames(nextDemon.Moves);
+
+                yield return dialogBox.TypeDialog($"Go {nextDemon.Base.Name}!");
+
+                PlayerAction();
+            } else
+            {
+                OnBattleOver(false);
+            }
         }
         else
         {

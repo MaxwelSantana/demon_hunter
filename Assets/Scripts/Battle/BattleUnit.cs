@@ -5,15 +5,13 @@ using UnityEngine.UI;
 
 public class BattleUnit : MonoBehaviour
 {
-    [SerializeField] DemonBase _base;
-    [SerializeField] int level;
     [SerializeField] bool isPlayerUnit;
 
     public Demon Demon { get; private set; }
 
-    public void Setup()
+    public void Setup(Demon demon)
     {
-        Demon = new Demon(_base, level);
+        Demon = demon;
 
         if (isPlayerUnit)
         {

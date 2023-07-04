@@ -318,8 +318,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 76.25004, y: 14}
-  m_SizeDelta: {x: 122.86, y: 41.38}
+  m_AnchoredPosition: {x: 101.44, y: 14}
+  m_SizeDelta: {x: 173.23, y: 41.38}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &94643481
 CanvasRenderer:
@@ -628,6 +628,7 @@ GameObject:
   m_Component:
   - component: {fileID: 342484109}
   - component: {fileID: 342484108}
+  - component: {fileID: 342484110}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -665,6 +666,23 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &342484110
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 342484107}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aba724ead1a76aa489c57989cbfdb596, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wildDemons:
+  - _base: {fileID: 11400000, guid: f0531fbde139c3a4c8878145f5a5c2f4, type: 2}
+    level: 4
+  - _base: {fileID: 11400000, guid: f0531fbde139c3a4c8878145f5a5c2f4, type: 2}
+    level: 7
 --- !u!1 &379720249
 GameObject:
   m_ObjectHideFlags: 0
@@ -700,7 +718,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -47, y: 14}
+  m_AnchoredPosition: {x: -19.4, y: 14}
   m_SizeDelta: {x: 74.640015, y: 41.38}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &379720251
@@ -7520,6 +7538,7 @@ GameObject:
   - component: {fileID: 683901450}
   - component: {fileID: 683901449}
   - component: {fileID: 683901452}
+  - component: {fileID: 683901453}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -7635,6 +7654,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &683901453
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 683901448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76dbd4b914c173049bec8f71a286cdff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  demons:
+  - _base: {fileID: 11400000, guid: 4f5abb09d7ceed0458c295e392ef6b90, type: 2}
+    level: 7
+  - _base: {fileID: 11400000, guid: f0531fbde139c3a4c8878145f5a5c2f4, type: 2}
+    level: 5
 --- !u!1 &700937951
 GameObject:
   m_ObjectHideFlags: 0
@@ -9246,8 +9282,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad3d77b413b7b7e4fbfcf310bff593ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _base: {fileID: 11400000, guid: f0531fbde139c3a4c8878145f5a5c2f4, type: 2}
-  level: 5
   isPlayerUnit: 0
 --- !u!1 &1680718454
 GameObject:
@@ -10836,8 +10870,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad3d77b413b7b7e4fbfcf310bff593ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _base: {fileID: 11400000, guid: 4f5abb09d7ceed0458c295e392ef6b90, type: 2}
-  level: 7
   isPlayerUnit: 1
 --- !u!1 &2112087305
 GameObject:
