@@ -27,7 +27,7 @@ public class Character : MonoBehaviour
         targetPos.x += moveVec.x;
         targetPos.y += moveVec.y;
 
-        if (!IsWalkable(targetPos))
+        if (!IsPathClear(targetPos))
         {
             yield break;
         }
@@ -51,6 +51,20 @@ public class Character : MonoBehaviour
         animator.IsMoving = IsMoving;
     }
 
+    private bool IsPathClear(Vector3 targetPos)
+    {
+        var diff = targetPos - transform.position;
+        var dir = diff.normalized;
+
+        if (Physics2D.BoxCast(transform.position + dir, new Vector2(0.2f, 0.2f), 0f, dir, diff.magnitude - 1, 
+            GameLayers.i.SolidLayer | GameLayers.i.InteractableLayer | GameLayers.i.PlayerLayer))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     private bool IsWalkable(Vector3 targetPos)
     {
         if (Physics2D.OverlapCircle(targetPos, 0.02f, GameLayers.i.SolidLayer | GameLayers.i.InteractableLayer) != null)
@@ -59,5 +73,20 @@ public class Character : MonoBehaviour
         }
 
         return true;
+    }
+
+    public void LookTowards(Vector3 targetPos)
+    {
+        var xDiff = Mathf.Floor(targetPos.x) - Mathf.Floor(transform.position.x);
+        var yDiff = Mathf.Floor(targetPos.y) - Mathf.Floor(transform.position.y);
+
+        if (xDiff == 0 || yDiff == 0)
+        {
+            animator.MoveX = Mathf.Clamp(xDiff, -1f, 1f);
+            animator.MoveY = Mathf.Clamp(yDiff, -1f, 1f);
+        }
+        else
+            Debug.LogError("Error in Look Towards: You cant ask character to look in diagonal.");
+
     }
 }

@@ -5,7 +5,11 @@ using Random = UnityEngine.Random;
 
 public class PlayerController : MonoBehaviour
 {
+    [SerializeField] string name;
+    [SerializeField] Sprite sprite;
+
     public event Action OnEncountered;
+    public event Action<Collider2D> OnEnterTrainersView;
 
     private Vector2 input;
 
@@ -28,7 +32,7 @@ public class PlayerController : MonoBehaviour
 
             if (input != Vector2.zero)
             {
-                StartCoroutine(character.Move(input, CheckForEncounters));
+                StartCoroutine(character.Move(input, OnMoveOver));
             }
         }
 
@@ -40,6 +44,12 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void OnMoveOver()
+    {
+        CheckForEncounters();
+        CheckIfInTrainersView();
+    }
+
     void Interact()
     {
         var facingDir = new Vector3(character.Animator.MoveX, character.Animator.MoveY);
@@ -48,10 +58,9 @@ public class PlayerController : MonoBehaviour
         // Debug.DrawLine(transform.position, interactPos, Color.green, 0.5f);
 
         var collider = Physics2D.OverlapCircle(interactPos, 0.3f, GameLayers.i.InteractableLayer);
-
         if (collider != null)
         {
-            collider.GetComponent<Interactable>()?.Interact();
+            collider.GetComponent<Interactable>()?.Interact(transform);
         }
     }
     private void CheckForEncounters()
@@ -61,9 +70,28 @@ public class PlayerController : MonoBehaviour
             if (Random.Range(1, 101) <= 50)
             {
                 character.Animator.IsMoving = false;
-                Debug.Log("A wild demon appeared!");
                 OnEncountered();
             }
         }
+    }
+
+    private void CheckIfInTrainersView()
+    {
+        var collider = Physics2D.OverlapCircle(transform.position, 0.2f, GameLayers.i.FovLayer);
+        if (collider != null)
+        {
+            character.Animator.IsMoving = false;
+            OnEnterTrainersView?.Invoke(collider);
+        }
+    }
+
+    public string Name
+    {
+        get => name;
+    }
+
+    public Sprite Sprite
+    {
+        get => sprite;
     }
 }

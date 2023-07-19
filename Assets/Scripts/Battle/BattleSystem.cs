@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public enum BattleState
 {
@@ -14,6 +15,8 @@ public class BattleSystem : MonoBehaviour
     [SerializeField] BattleUnit enemyUnit;
     [SerializeField] BattleDialogBox dialogBox;
     [SerializeField] PartyScreen partyScreen;
+    [SerializeField] Image playerImage;
+    [SerializeField] Image trainerImage;
 
     public event Action<bool> OnBattleOver;
 
@@ -23,7 +26,13 @@ public class BattleSystem : MonoBehaviour
     int currentMember;
 
     DemonParty playerParty;
+    DemonParty trainerParty;
     Demon wildDemon;
+
+    bool isTrainerBattle = false;
+
+    PlayerController player;
+    TrainerController trainer;
 
     public void StartBattle(DemonParty playerParty, Demon wildDemon)
     {
@@ -32,17 +41,49 @@ public class BattleSystem : MonoBehaviour
         StartCoroutine(SetupBattle());
     }
 
+    public void StartTrainerBattle(DemonParty playerParty, DemonParty trainerParty)
+    {
+        this.playerParty = playerParty;
+        this.trainerParty = trainerParty;
+
+        isTrainerBattle = true;
+        player = playerParty.GetComponent<PlayerController>();
+        trainer = trainerParty.GetComponent<TrainerController>();
+
+        StartCoroutine(SetupBattle());
+    }
+
     private IEnumerator SetupBattle()
     {
-        playerUnit.Setup(playerParty.GetHelthyDemon());
-        enemyUnit.Setup(wildDemon);
+        playerUnit.Clear();
+        enemyUnit.Clear();
+
+        if (!isTrainerBattle)
+        {
+            // Wild Pokemon Battle
+            playerUnit.Setup(playerParty.GetHelthyDemon());
+            enemyUnit.Setup(wildDemon);
+
+            dialogBox.SetMoveNames(playerUnit.Demon.Moves);
+
+            yield return dialogBox.TypeDialog($"A wild {enemyUnit.Demon.Base.Name} appeared.");
+        } else
+        {
+            // Trainer Battle
+            playerUnit.gameObject.SetActive(false);
+            enemyUnit.gameObject.SetActive(false);
+
+            playerImage.gameObject.SetActive(true);
+            trainerImage.gameObject.SetActive(true);
+
+            playerImage.sprite = player.Sprite;
+            trainerImage.sprite = trainer.Sprite;
+
+            yield return dialogBox.TypeDialog($"{trainer.Name} wants to battle.");
+        }
+        
 
         partyScreen.Init();
-
-        dialogBox.SetMoveNames(playerUnit.Demon.Moves);
-
-        yield return dialogBox.TypeDialog($"A wild {enemyUnit.Demon.Base.Name} appeared.");
-
         ActionSelection();
     }
 
