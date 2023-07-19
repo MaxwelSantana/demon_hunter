@@ -36,6 +36,12 @@ public class BattleUnit : MonoBehaviour
             image.sprite = Demon.Base.FrontSprite;
         }
 
+        hud.gameObject.SetActive(true);
         hud.SetData(demon);
+    }
+
+    public void Clear()
+    {
+        hud.gameObject.SetActive(false);
     }
 }
