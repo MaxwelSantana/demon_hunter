@@ -1,12 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
 public enum BattleState
 {
-    Start, ActionSelection, MoveSelection, PerformMove, Busy, PartyScreen, BattleOver
+    Start, ActionSelection, MoveSelection, PerformMove, Busy, PartyScreen, AboutToUse, BattleOver
 }
 
 public class BattleSystem : MonoBehaviour
@@ -21,9 +22,11 @@ public class BattleSystem : MonoBehaviour
     public event Action<bool> OnBattleOver;
 
     BattleState state;
+    BattleState? prevState;
     int currentAction;
     int currentMove;
     int currentMember;
+    bool aboutToUsechoice = true;
 
     DemonParty playerParty;
     DemonParty trainerParty;
@@ -80,8 +83,28 @@ public class BattleSystem : MonoBehaviour
             trainerImage.sprite = trainer.Sprite;
 
             yield return dialogBox.TypeDialog($"{trainer.Name} wants to battle.");
+
+            // send out the first demon of the trainer
+            trainerImage.gameObject.SetActive(false);
+            enemyUnit.gameObject.SetActive(true);
+
+            var enemyDemon = trainerParty.GetHelthyDemon();
+            enemyUnit.Setup(enemyDemon);
+
+            yield return dialogBox.TypeDialog($"{trainer.Name} send out {enemyDemon.Base.Name}.");
+
+            // send out the first demon of the player
+            playerImage.gameObject.SetActive(false);
+            playerUnit.gameObject.SetActive(true);
+
+            var playerDemon = playerParty.GetHelthyDemon();
+            playerUnit.Setup(playerDemon);
+
+            yield return dialogBox.TypeDialog($"Go {trainer.Name} {playerDemon.Base.Name}.");
+
+            dialogBox.SetMoveNames(playerUnit.Demon.Moves);
         }
-        
+
 
         partyScreen.Init();
         ActionSelection();
@@ -113,6 +136,14 @@ public class BattleSystem : MonoBehaviour
         dialogBox.EnableActionSelector(false);
         dialogBox.EnableDialogText(false);
         dialogBox.EnableMoveSelector(true);
+    }
+
+    IEnumerator AboutToUse(Demon demon)
+    {
+        state = BattleState.Busy;
+        yield return dialogBox.TypeDialog($"{trainer.Name} is about to use {demon.Base.Name}. Do you want to change pokemon?");
+        state = BattleState.AboutToUse;
+        dialogBox.EnableChoiceBox(true);
     }
 
     private IEnumerator PlayerMove()
@@ -174,7 +205,21 @@ public class BattleSystem : MonoBehaviour
             }
         } else
         {
-            BattleOver(true);
+            if(!isTrainerBattle)
+            {
+                BattleOver(true);
+            }else
+            {
+                var nextDemon= trainerParty.GetHelthyDemon();
+                if (nextDemon != null)
+                {
+                    StartCoroutine(AboutToUse(nextDemon));
+                } else
+                {
+                    BattleOver(true);
+                }
+            }
+
         }
     }
 
@@ -201,6 +246,9 @@ public class BattleSystem : MonoBehaviour
         else if (state == BattleState.PartyScreen)
         {
             HandlePartySelection();
+        } else if (state == BattleState.AboutToUse)
+        {
+            HandleAboutToUse();
         }
     }
 
@@ -324,10 +372,54 @@ public class BattleSystem : MonoBehaviour
             partyScreen.gameObject.SetActive(false);
             state = BattleState.Busy;
             StartCoroutine(SwitchDemon(selectedMember));
-        } else if (Input.GetKeyDown(KeyCode.X))
+        } else if (Input.GetKeyDown(KeyCode.Escape))
         {
+            if (playerUnit.Demon.HP <= 0)
+            {
+                partyScreen.SetMessageText("You have to choose a demon to continue");
+                return;
+            }
+
             partyScreen.gameObject.SetActive(false);
-            ActionSelection();
+
+            if (prevState == BattleState.AboutToUse)
+            {
+                prevState = null;
+                StartCoroutine(SendNextTrainerDemon());
+            } else
+            {
+                ActionSelection();
+            }
+
+        }
+    }
+
+    void HandleAboutToUse()
+    {
+        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            aboutToUsechoice = !aboutToUsechoice;
+        }
+
+        dialogBox.UpdateChoicebox(aboutToUsechoice);
+
+        if(Input.GetKeyDown(KeyCode.Return))
+        {
+            dialogBox.EnableChoiceBox(false);
+            if (aboutToUsechoice == true)
+            {
+                prevState = BattleState.AboutToUse;
+                // yes option
+                OpenPartyScreen();
+            } else
+            {
+                // no option
+                StartCoroutine(SendNextTrainerDemon());
+            }
+        } else if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            dialogBox.EnableChoiceBox(false);
+            StartCoroutine(SendNextTrainerDemon());
         }
     }
 
@@ -344,6 +436,18 @@ public class BattleSystem : MonoBehaviour
         dialogBox.SetMoveNames(newDemon.Moves);
 
         yield return dialogBox.TypeDialog($"Go {newDemon.Base.Name}!");
+
+        StartCoroutine(EnemyMove());
+    }
+
+    IEnumerator SendNextTrainerDemon()
+    {
+        state = BattleState.Busy;
+
+        var nextDemon = trainerParty.GetHelthyDemon();
+
+        enemyUnit.Setup(nextDemon);
+        yield return dialogBox.TypeDialog($"{trainer.Name} send out {nextDemon.Base.Name}.");
 
         StartCoroutine(EnemyMove());
     }

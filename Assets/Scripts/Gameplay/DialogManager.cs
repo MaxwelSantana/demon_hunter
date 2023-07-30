@@ -25,6 +25,7 @@ public class DialogManager : MonoBehaviour
 
     private void Awake()
     {
+        //dialogBox.SetActive(false);
         Instance = this;
     }
 

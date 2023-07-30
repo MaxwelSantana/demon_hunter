@@ -60,12 +60,15 @@ public class GameController : MonoBehaviour
         battleSystem.StartBattle(playerParty, wildDemon);
     }
 
+    TrainerController trainer;
+
     public void StartTrainerBattle(TrainerController trainerController)
     {
         state = GameState.Battle;
         battleSystem.gameObject.SetActive(true);
         worldCamera.gameObject.SetActive(false);
 
+        this.trainer = trainerController;
         var playerParty = playerController.GetComponent<DemonParty>();
         var trainerParty = trainerController.GetComponent<DemonParty>();
 
@@ -74,6 +77,12 @@ public class GameController : MonoBehaviour
 
     private void EndBattle(bool won)
     {
+        if (trainer != null && won == true)
+        {
+            trainer.BattleLost();
+            trainer = null;
+        }
+
         state = GameState.FreeRoam;
         battleSystem.gameObject.SetActive(false);
         worldCamera.gameObject.SetActive(true); 
