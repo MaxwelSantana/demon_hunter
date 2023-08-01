@@ -1,7 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public enum GameState { FreeRoam, Battle, Dialog, Cutscene }
 public class GameController : MonoBehaviour
@@ -9,10 +12,18 @@ public class GameController : MonoBehaviour
     [SerializeField] PlayerController playerController;
     [SerializeField] BattleSystem battleSystem;
     [SerializeField] Camera worldCamera;
+    [SerializeField] int minBattlesToFightMaster = 3;
+    [SerializeField] GameObject trainerBattlesWon;
+    [SerializeField] Text trainerBattlesWonText;
+    [SerializeField] int masterTrainerSceneToload = -1;
+    [SerializeField] MasterBattle masterBattlePanel;
 
     GameState state;
+    int battlesWon = 2;
 
     public static GameController Instance { get; private set; }
+
+    Fader fader;
 
     private void Awake()
     {
@@ -46,6 +57,8 @@ public class GameController : MonoBehaviour
                 state = GameState.FreeRoam;
             }
         };
+
+        fader = FindObjectOfType<Fader>();
     }
 
     private void StartBattle()
@@ -67,6 +80,7 @@ public class GameController : MonoBehaviour
         state = GameState.Battle;
         battleSystem.gameObject.SetActive(true);
         worldCamera.gameObject.SetActive(false);
+        trainerBattlesWon.gameObject.SetActive(false);
 
         this.trainer = trainerController;
         var playerParty = playerController.GetComponent<DemonParty>();
@@ -79,13 +93,55 @@ public class GameController : MonoBehaviour
     {
         if (trainer != null && won == true)
         {
+            
             trainer.BattleLost();
+            if (trainer.IsMasterHunter)
+            {
+                StartCoroutine(ReceiveMedal());
+            } else
+            {
+                battlesWon++;
+                UpdateBattlesWon();
+            }
             trainer = null;
         }
 
         state = GameState.FreeRoam;
         battleSystem.gameObject.SetActive(false);
-        worldCamera.gameObject.SetActive(true); 
+        worldCamera.gameObject.SetActive(true);
+        trainerBattlesWon.gameObject.SetActive(true);
+    }
+
+    void UpdateBattlesWon()
+    {
+        if (battlesWon == minBattlesToFightMaster)
+        {
+            trainerBattlesWon.gameObject.SetActive(false);
+            StartCoroutine(SwitchMasterTrainerScene());
+            return;
+        }
+
+        trainerBattlesWonText.text = $"Battles: {battlesWon}/{minBattlesToFightMaster}";
+    }
+
+    IEnumerator ReceiveMedal()
+    {
+        yield return fader.FadeIn(0.5f);
+        yield return fader.FadeOut(0.5f);
+        yield return masterBattlePanel.Show();
+    }
+
+    IEnumerator SwitchMasterTrainerScene()
+    {
+        trainerBattlesWon.gameObject.SetActive(false);
+        yield return fader.FadeIn(0.5f);
+        yield return SceneManager.LoadSceneAsync(masterTrainerSceneToload);
+
+        var destPortal = FindObjectOfType<Portal>();
+
+        playerController.Character.SetPositionAndSnapToTile(destPortal.SpawnPoint.position);
+        
+        yield return fader.FadeOut(0.5f);
     }
 
     private void Update()

@@ -94,4 +94,6 @@ public class PlayerController : MonoBehaviour
     {
         get => sprite;
     }
+
+    public Character Character { get => character; }
 }

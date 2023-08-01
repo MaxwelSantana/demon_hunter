@@ -10,6 +10,9 @@ public class TrainerController : MonoBehaviour, Interactable
     [SerializeField] Dialog dialogAfterBattle;
     [SerializeField] GameObject exclamation;
     [SerializeField] GameObject fov;
+    [SerializeField] bool isMasterhunter = false;
+
+    public bool IsMasterHunter { get { return isMasterhunter; } }
 
     bool battleLost = false;
 

@@ -10,6 +10,8 @@ public class Character : MonoBehaviour
 
     public bool IsMoving { get; private set; }
 
+    public float OffsetY { get; private set; } = 0.3f;
+
     CharacterAnimator animator;
 
     public CharacterAnimator Animator { get => animator; }
@@ -17,6 +19,16 @@ public class Character : MonoBehaviour
     private void Awake()
     {
         animator = GetComponent<CharacterAnimator>();
+        SetPositionAndSnapToTile(transform.position);
+    }
+
+    public void SetPositionAndSnapToTile(Vector2 position)
+    {
+        // 2.3 -> Floor -> 2 + 0.5 -> 2.5
+        position.x = Mathf.Floor(position.x) + 0.5f;
+        position.y = Mathf.Floor(position.y) + 0.5f + OffsetY;
+
+        transform.position = position;
     }
 
     public IEnumerator Move(Vector2 moveVec, Action OnMoveOver = null)

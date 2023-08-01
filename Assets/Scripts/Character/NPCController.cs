@@ -22,8 +22,6 @@ public class NPCController : MonoBehaviour, Interactable
 
     public void Interact(Transform initiator)
     {
-        Debug.Log("passou: state: " + state);
-
         if (state == NPCSate.Idle || state == NPCSate.Walking)
         {
             state = NPCSate.Dialog;
