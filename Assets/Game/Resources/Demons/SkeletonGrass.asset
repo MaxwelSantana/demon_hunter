@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69fddc55bc5a4ef499b038ef6eb791cf, type: 3}
   m_Name: SkeletonGrass
   m_EditorClassIdentifier: 
-  name: Skeleton Grass
+  name: Octopus
   description: 
-  frontSprite: {fileID: -1920814117, guid: e8b0806ca49eca442b9616a64fd9fe3c, type: 3}
-  backSprite: {fileID: -1267218590, guid: e8b0806ca49eca442b9616a64fd9fe3c, type: 3}
+  frontSprite: {fileID: 1481715044, guid: f25061dbbd7db324cab2b25b8e79f201, type: 3}
+  backSprite: {fileID: 909671649, guid: f25061dbbd7db324cab2b25b8e79f201, type: 3}
   demonType: 5
   maxHp: 45
   attack: 49

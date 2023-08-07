@@ -17,6 +17,10 @@ public class GameController : MonoBehaviour
     [SerializeField] Text trainerBattlesWonText;
     [SerializeField] int masterTrainerSceneToload = -1;
     [SerializeField] MasterBattle masterBattlePanel;
+    [SerializeField] AudioClip homeSceneMusic;
+    [SerializeField] AudioClip masterHunterSceneMusic;
+    [SerializeField] AudioClip trainerBattleMusic;
+    [SerializeField] AudioClip masterTrainerBattleMusic;
 
     GameState state;
     int battlesWon = 2;
@@ -59,6 +63,8 @@ public class GameController : MonoBehaviour
         };
 
         fader = FindObjectOfType<Fader>();
+        UpdateBattlesWon();
+        AudioManager.i.PlayMusic(homeSceneMusic);
     }
 
     private void StartBattle()
@@ -87,6 +93,13 @@ public class GameController : MonoBehaviour
         var trainerParty = trainerController.GetComponent<DemonParty>();
 
         battleSystem.StartTrainerBattle(playerParty, trainerParty);
+        if (this.trainer.IsMasterHunter)
+        {
+            AudioManager.i.PlayMusic(masterTrainerBattleMusic);
+        } else
+        {
+            AudioManager.i.PlayMusic(trainerBattleMusic);
+        }
     }
 
     private void EndBattle(bool won)
@@ -110,18 +123,22 @@ public class GameController : MonoBehaviour
         battleSystem.gameObject.SetActive(false);
         worldCamera.gameObject.SetActive(true);
         trainerBattlesWon.gameObject.SetActive(true);
+        AudioManager.i.PlayMusic(homeSceneMusic);
     }
 
     void UpdateBattlesWon()
     {
+        if (battlesWon <= minBattlesToFightMaster)
+        {
+            trainerBattlesWonText.text = $"Battles: {battlesWon}/{minBattlesToFightMaster}";
+        }
+
         if (battlesWon == minBattlesToFightMaster)
         {
             trainerBattlesWon.gameObject.SetActive(false);
             StartCoroutine(SwitchMasterTrainerScene());
             return;
         }
-
-        trainerBattlesWonText.text = $"Battles: {battlesWon}/{minBattlesToFightMaster}";
     }
 
     IEnumerator ReceiveMedal()
@@ -133,15 +150,17 @@ public class GameController : MonoBehaviour
 
     IEnumerator SwitchMasterTrainerScene()
     {
-        trainerBattlesWon.gameObject.SetActive(false);
         yield return fader.FadeIn(0.5f);
         yield return SceneManager.LoadSceneAsync(masterTrainerSceneToload);
+        trainerBattlesWon.gameObject.SetActive(false);
 
         var destPortal = FindObjectOfType<Portal>();
 
         playerController.Character.SetPositionAndSnapToTile(destPortal.SpawnPoint.position);
         
         yield return fader.FadeOut(0.5f);
+
+        AudioManager.i.PlayMusic(masterHunterSceneMusic);
     }
 
     private void Update()

@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69fddc55bc5a4ef499b038ef6eb791cf, type: 3}
   m_Name: SkeletonFire
   m_EditorClassIdentifier: 
-  name: Skeleton Fire
+  name: Cyclop
   description: 
-  frontSprite: {fileID: -1920814117, guid: e8b0806ca49eca442b9616a64fd9fe3c, type: 3}
-  backSprite: {fileID: -1267218590, guid: e8b0806ca49eca442b9616a64fd9fe3c, type: 3}
+  frontSprite: {fileID: 1402844047, guid: 0f0589e1159f03243a8e6c79eb527837, type: 3}
+  backSprite: {fileID: -664803859, guid: 0f0589e1159f03243a8e6c79eb527837, type: 3}
   demonType: 2
   maxHp: 39
   attack: 52
